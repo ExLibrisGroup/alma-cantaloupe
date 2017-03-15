@@ -1,0 +1,13 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "joshmweisman/alma-cantaloupe",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "8182"
+    }
+  ],
+  "Logging": "/var/log/cantaloupe"
+}
