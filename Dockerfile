@@ -8,22 +8,10 @@ ENV CANTALOUPE_VERSION 3.3
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	wget git gcc g++ unzip make pkg-config
 
-# Install cmake 3.2
-WORKDIR /tmp/cmake
-RUN wget http://www.cmake.org/files/v3.2/cmake-3.2.2.tar.gz && tar xf cmake-3.2.2.tar.gz && cd cmake-3.2.2 && ./configure && make && make install
-
 # Install imaging tools
-RUN apt-get install -y liblcms2-dev  libtiff-dev libpng-dev libz-dev libopenjp2-7
-
-# Download and compile OpenJPEG v2.1.2
-WORKDIR /tmp/openjpeg
-RUN git clone https://github.com/uclouvain/openjpeg.git ./
-RUN git checkout tags/v2.1.2
-RUN cmake . && make && make install
+RUN apt-get install -y liblcms2-dev  libtiff-dev libpng-dev libz-dev libopenjp2-tools
 
 # run non priviledged
-#RUN groupadd -r www-data && useradd -r -g www-data cantaloupe
-#RUN adduser -S cantaloupe
 RUN groupadd -f www-data && useradd -d /home -g www-data -s /sbin/false cantaloupe
 
 #
@@ -38,23 +26,22 @@ RUN curl -OL https://github.com/medusa-project/cantaloupe/releases/download/v$CA
  && rm -rf /tmp/Cantaloupe-$CANTALOUPE_VERSION \
  && rm /tmp/Cantaloupe-$CANTALOUPE_VERSION.zip
 
+# Ruby dependencies
+ENV GEMSDIR /home/.gem/jruby/2.3.0
+RUN apt-get install -y rubygems
+RUN gem install -i $GEMSDIR jwt aws-sdk 
+
 # Configuration and log directories
 COPY cantaloupe.properties /etc/cantaloupe.properties 
-ENV CACHEDIR /var/cache/cantaloupe
 RUN mkdir -p /var/log/cantaloupe \
- && mkdir -p $CACHEDIR \
+ && mkdir -p /var/cache/cantaloupe \
  && chown -R cantaloupe /var/log/cantaloupe \
- && chown -R cantaloupe $CACHEDIR \
+ && chown -R cantaloupe /var/cache/cantaloupe \
  && chown cantaloupe /etc/cantaloupe.properties
 
 # Delegate script and dependencies
-ENV GEMSDIR /usr/local
-RUN apt-get install -y rubygems
 COPY delegates.rb /etc/delegates.rb
-# Give access to installed gems and set imagesdir
-RUN sed -i "1igemsdir = '$GEMSDIR/gems'\n$:.concat(Dir.entries(gemsdir).select {|entry| File.directory? File.join(gemsdir,entry) and \!(entry =='.' || entry == '..') }.map{|x| File.join(gemsdir, x, 'lib')} )\nIMAGESDIR='$CACHEDIR'" /etc/delegates.rb 
-COPY keyfile-pub.pem /home/keyfile-pub.pem
-RUN gem install -i $GEMSDIR jwt aws-sdk
+COPY keyfile-pub.pem /etc/keyfile-pub.pem
 
 EXPOSE 8182
 
