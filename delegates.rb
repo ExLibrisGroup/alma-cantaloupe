@@ -8,36 +8,19 @@ module Cantaloupe
   def self.authorized?(identifier, full_size, operations, resulting_size,
                        output_format, request_uri, request_headers, client_ip,
                        cookies)
-    true
+  	# Validate token
+		@key_file = File.join(Cantaloupe::Utils::WORKDIR, 'keyfile-pub.pem')
+		@public_key ||= OpenSSL::PKey::RSA.new(File.read(@key_file))
+		token = JWT.decode(identifier, @public_key, true, { :algorithm => 'RS256' })[0]
+		true
+	rescue Exception => ex
+		puts "delegates.rb: authorized? error. #{ex.class}: #{ex.message}"
+		false
   end	
 
-	module HttpResolver
-
-		###
-		# Gets a JWT as an identifier, validates the token,
-		# and extracts the endpoint, bucket, and file path.
-		# Then it signs the URL and returns it to Cantaloupe
-		# for processing.
-		#
-		# This can't bve used since HttpResolver performs a 
-		# HEAD request first, and the signed URL for HEAD is
-		# different than that for GET.
-		###
-		def self.get_url(identifier)
-			# Validate the token
-			key_file = File.join(File.expand_path(File.dirname(__FILE__)), 'keyfile-pub.pem')
-			public_key = OpenSSL::PKey::RSA.new(File.read(key_file))
-			token = JWT.decode(identifier, public_key, true, { :algorithm => 'RS256' })[0]
-
-			# Sign the URL
-			Aws.config[:region] = token["region"]
- 			signer = Aws::S3::Presigner.new
- 			signer.presigned_url(:get_object, bucket: token["bucket"], key: token["key"])
-	 	rescue 
-	 		nil
-		end
-
-	end
+  def self.extra_iiif2_information_response_keys(identifier)
+    { }
+  end  
 
 	module FilesystemResolver
 
@@ -48,15 +31,13 @@ module Cantaloupe
 		# If not, file is downloaded. Returns the path.
 		###
     def self.get_pathname(identifier)
-			# Validate the token
-			key_file = File.join(File.expand_path(File.dirname(__FILE__)), 'keyfile-pub.pem')
-			public_key = OpenSSL::PKey::RSA.new(File.read(key_file))
-			token = JWT.decode(identifier, public_key, true, { :algorithm => 'RS256' })[0]
+			# Decode the token (validation done in authorized?)
+			token = JWT.decode(identifier, nil, false)[0]
 
 			# Build path
-			begin path = IMAGESDIR rescue path = '/tmp/cantaloupe' end
-			path = File.join(path, token['bucket'], token['key'])
-			
+			path = Utils::get_property('FilesystemCache.pathname')
+			path = File.join(path, 'source', token['bucket'], token['key'])
+
 			# If doesn't exist, download
 			if !File.exist? path
 				FileUtils.makedirs File.dirname(path)
@@ -69,10 +50,32 @@ module Cantaloupe
 			end
 
 			path
-		rescue
+		rescue Exception => ex
+			puts "delegates.rb: get_pathname error. #{ex.class}: #{ex.message}"
 			nil
     end
 
   end
+  private
+
+  module Utils
+
+  	begin
+			require 'java'
+			include_package java.lang
+			WORKDIR = File.expand_path(File.dirname(System.getProperties['cantaloupe.config']))
+		rescue LoadError # For development with regular Ruby
+			require 'inifile'
+			WORKDIR = File.expand_path(File.dirname(__FILE__))
+			@inifile = IniFile.load(File.join(WORKDIR, 'cantaloupe.properties'))['global']
+		end	
+
+  	def self.get_property(property)
+			@inifile ? @inifile[property] : 
+				Java::EduIllinoisLibraryCantaloupeConfig::ConfigurationFactory.getInstance().getString(property) 
+		rescue
+			nil
+  	end
+  end  
 
 end
