@@ -15,8 +15,13 @@ module Cantaloupe
   	if @@reps.key?(identifier['rep_id'])
   		return @@reps[identifier['rep_id']]
   	else
-  		uri = URI("https://#{identifier['instance']}.alma.exlibrisgroup.com/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
-  		Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
+	    if identifier['instance'].end_with?('.corp')
+	            uri = "http://#{identifier['instance']}.exlibrisgroup.com:1801"
+	    else
+	            uri = "https://#{identifier['instance']}.alma.exlibrisgroup.com"
+	    end
+	    uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
+      Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme.eql?('https')) do |http|
   			resp = http.head(uri)
   			@@reps[identifier['rep_id']] = resp.is_a?(Net::HTTPSuccess)
   		end
