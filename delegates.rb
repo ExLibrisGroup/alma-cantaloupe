@@ -40,7 +40,7 @@ module Cantaloupe
 		# Calculates the path. Checks if the file exists.
 		# If not, file is downloaded. Returns the path.
 		###
-    def self.get_pathname(identifier)
+    def self.get_pathname(identifier, context)
 			# Decode the identifier
 			identifier = JSON.parse(Base64.decode64(identifier))
 
