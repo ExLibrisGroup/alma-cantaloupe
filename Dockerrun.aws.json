@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "joshmweisman/alma-cantaloupe",
+    "Name": "exlibrisgroup/alma-cantaloupe",
     "Update": "true"
   },
   "Ports": [
