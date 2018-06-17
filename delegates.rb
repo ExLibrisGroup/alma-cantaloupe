@@ -11,14 +11,20 @@ module Cantaloupe
   def self.authorized?(identifier, full_size, operations, resulting_size,
                        output_format, request_uri, request_headers, client_ip,
                        cookies)
-	cgi = CGI::parse(URI::parse(request_uri).query)
 	identifier = JSON.parse(Base64.decode64(identifier))
 	if identifier['instance'].end_with?('.corp')
 	        uri = "http://#{identifier['instance']}.exlibrisgroup.com:1801"
         else
 	        uri = "https://#{identifier['instance']}.alma.exlibrisgroup.com"
 	end
-	uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}?jwt_claims=#{cgi['JWT_CLAIMS']}")
+
+	if request_uri.include?('JWT_CLAIMS')
+		cgi = CGI::parse(URI::parse(request_uri).query)
+		uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}?jwt_claims=#{cgi['JWT_CLAIMS']}")
+
+	else
+		uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
+	end
         Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme.eql?('https')) do |http|
   		resp = http.head(uri)
   		resp.is_a?(Net::HTTPSuccess)
