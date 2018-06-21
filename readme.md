@@ -50,11 +50,12 @@ The credentials file must be readable by the cantaloupe user. So the file permis
     $ chmod o+r ~/.aws/*
 
 ### Connect to a running container
-    $ docker exec -i -t --user root exlibrisgroup/alma-cantaloupe /bin/bash
+    $ docker exec -i -t --user root cantaloupe /bin/bash
 
 Use `Cntrl-P`, `Cntrl-Q` to leave running.
 
 ### Build the container
-
+    $ git clone https://github.com/ExLibrisGroup/alma-cantaloupe.git
+    $ cd alma-cantaloupe
     $ docker build -t exlibrisgroup/alma-cantaloupe .
 
