@@ -2,7 +2,7 @@
 
 A docker build of the [Canteloupe Image Server](https://medusa-project.github.io/cantaloupe/) with a custom script resolver for digital resources managed in [Ex Libris Alma](http://www.exlibrisgroup.com/category/AlmaOverview).
 
-Docker hub repository available at https://hub.docker.com/r/joshmweisman/alma-cantaloupe/.
+Docker hub repository available at https://hub.docker.com/r/exlibrisgroup/alma-cantaloupe/.
 
 The docker image was based on input from the example in this [fork](https://github.com/kaij/cantaloupe/tree/docker-deploy/docker) and the [Loris docker repository](https://github.com/loris-imageserver/loris-docker) (for the OpenJPEG installation). 
 
@@ -37,24 +37,24 @@ configuration in `Dockerrun.aws.json`.
 
 ### Pull the image from docker
 
-    $ docker pull joshmweisman/alma-cantaloupe
+    $ docker pull exlibrisgroup/alma-cantaloupe
 
 ### Run the image in development
 
 Because the resolver requires AWS credentials, we mount the current user's home directory as the cantaloupe user's home in the container:
 
-    $ docker run -d --rm -p 8182:8182 -v ~/.aws:/home/.aws --name cantaloupe joshmweisman/cantaloupe
+    $ docker run -d --rm -p 8182:8182 -v ~/.aws:/home/.aws --name cantaloupe exlibrisgroup/alma-cantaloupe
 
 The credentials file must be readable by the cantaloupe user. So the file permissions must be changed on the host:
 
     $ chmod o+r ~/.aws/*
 
 ### Connect to a running container
-    $ docker exec -i -t --user root joshmweisman/cantaloupe /bin/bash
+    $ docker exec -i -t --user root exlibrisgroup/alma-cantaloupe /bin/bash
 
 Use `Cntrl-P`, `Cntrl-Q` to leave running.
 
 ### Build the container
 
-    $ docker build -t joshmweisman/alma-cantaloupe .
+    $ docker build -t exlibrisgroup/alma-cantaloupe .
 
