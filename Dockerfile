@@ -2,7 +2,7 @@ FROM openjdk:8-jdk
 
 # Cantaloupe docker starter script
 
-ENV CANTALOUPE_VERSION 3.4.2
+ENV CANTALOUPE_VERSION 3.4.3
 
 # Update packages and install tools 
 RUN apt-get update && apt-get install -y --no-install-recommends \
