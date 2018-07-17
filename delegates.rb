@@ -4,6 +4,10 @@ require 'net/http'
 require 'json'
 require 'base64'
 require 'cgi'
+require 'jwt'
+require 'openssl'
+require 'logger'
+
 
 module Cantaloupe
 	@@reps ||= {}
@@ -11,27 +15,38 @@ module Cantaloupe
   def self.authorized?(identifier, full_size, operations, resulting_size,
                        output_format, request_uri, request_headers, client_ip,
                        cookies)
+
+
+		
+
 	identifier = JSON.parse(Base64.decode64(identifier))
-	if identifier['instance'].end_with?('.corp')
-	        uri = "http://#{identifier['instance']}.exlibrisgroup.com:1801"
-        else
-	        uri = "https://#{identifier['instance']}.alma.exlibrisgroup.com"
+	if cookies.select{ |c| c['JWT_CLAIMS'] }.any?
+			@key_file = File.join(Cantaloupe::Utils::WORKDIR, 'keyfile-pub.pem')	
+ 			@public_key ||= OpenSSL::PKey::RSA.new(File.read(@key_file))		
+			token = JWT.decode(cookies['JWT_CLAIMS'], @public_key, true, { :algorithm => 'RS256' ,:aud=> 'Audience',:iss=> 'Issuer' })[0]
+
+			if token['rep_id'] != identifier['rep_id']
+				 raise 'An error has occured.'
+			end
+			true
+		else	
+			if identifier['instance'].end_with?('.corp')
+	        			uri = "http://#{identifier['instance']}.exlibrisgroup.com:1801"
+        			else
+	       				uri = "https://#{identifier['instance']}.alma.exlibrisgroup.com"
+			end
+			uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
+				
+				Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme.eql?('https')) do |http|
+  				resp = http.head(uri)
+  				resp.is_a?(Net::HTTPSuccess)
+			end
+	
 	end
 
-	if request_uri.include?('JWT_CLAIMS')
-		cgi = CGI::parse(URI::parse(request_uri).query)
-		uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}?jwt_claims=#{cgi['JWT_CLAIMS']}")
-
-	else
-		uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
-	end
-        Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme.eql?('https')) do |http|
-  		resp = http.head(uri)
-  		resp.is_a?(Net::HTTPSuccess)
-  	end
 	rescue Exception => ex
-		puts "delegates.rb: authorized? error. #{ex.class}: #{ex.message}"
-		false
+			puts "delegates.rb: authorized? error. #{ex.class}: #{ex.message}"
+			false
   end	
 
   def self.extra_iiif2_information_response_keys(identifier)
