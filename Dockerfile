@@ -2,7 +2,7 @@ FROM openjdk:8-jdk
 
 # Cantaloupe docker starter script
 
-ENV CANTALOUPE_VERSION 3.4.3
+ENV CANTALOUPE_VERSION 4.0
 
 # Update packages and install tools 
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -42,10 +42,9 @@ RUN mkdir -p /var/log/cantaloupe \
 # Delegate script and dependencies
 COPY delegates.rb /etc/delegates.rb
 COPY keyfile-pub.pem /etc/keyfile-pub.pem
-
 EXPOSE 8182
 
 USER cantaloupe 
 WORKDIR /home
-CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx2g -jar /usr/local/cantaloupe/Cantaloupe-$CANTALOUPE_VERSION.war"]
+CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx4000m -jar /usr/local/cantaloupe-$CANTALOUPE_VERSION/Cantaloupe-$CANTALOUPE_VERSION.war"]
 
