@@ -22,7 +22,7 @@ RUN curl -OL https://github.com/medusa-project/cantaloupe/releases/download/v$CA
  && mkdir -p /usr/local/ \
  && cd /usr/local \
  && unzip /tmp/Cantaloupe-$CANTALOUPE_VERSION.zip \
- && ln -s Cantaloupe-$CANTALOUPE_VERSION cantaloupe \
+ && ln -s cantaloupe-$CANTALOUPE_VERSION cantaloupe \
  && rm -rf /tmp/Cantaloupe-$CANTALOUPE_VERSION \
  && rm /tmp/Cantaloupe-$CANTALOUPE_VERSION.zip
 
@@ -46,5 +46,5 @@ EXPOSE 8182
 
 USER cantaloupe 
 WORKDIR /home
-CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx4000m -jar /usr/local/cantaloupe/Cantaloupe-$CANTALOUPE_VERSION.war"]
+CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx4000m -jar /usr/local/cantaloupe/cantaloupe-$CANTALOUPE_VERSION.war"]
 
