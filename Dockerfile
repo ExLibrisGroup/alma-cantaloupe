@@ -46,5 +46,5 @@ EXPOSE 8182
 
 USER cantaloupe 
 WORKDIR /home
-CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx4000m -jar /usr/local/cantaloupe-$CANTALOUPE_VERSION/Cantaloupe-$CANTALOUPE_VERSION.war"]
+CMD ["sh", "-c", "java -Dcantaloupe.config=/etc/cantaloupe.properties -Xmx4000m -jar /usr/local/cantaloupe/Cantaloupe-$CANTALOUPE_VERSION.war"]
 
