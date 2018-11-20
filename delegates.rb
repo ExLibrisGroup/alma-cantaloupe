@@ -11,15 +11,24 @@ require 'java'
 java_import java.lang.System
 class CustomDelegate
 
-  attr_accessor :context
+
+
+
+  def context
+    @context
+  end
+
+  def context=( new_value )
+    @context= new_value
+  end
 
   def authorized?(options = {})
 
 		
 
-	identifier = JSON.parse(Base64.decode64(context['identifier']))
-	cookies = context['cookies']
-	if context['cookies'].select{ |c| c['JWT_CLAIMS'] }.any?
+	identifier = JSON.parse(Base64.decode64(@context['identifier']))
+	cookies = @context['cookies']
+	if @context['cookies'].select{ |c| c['JWT_CLAIMS'] }.any?
 			@key_file = File.join(get_work_dir, 'keyfile-pub.pem')	
  			@public_key ||= OpenSSL::PKey::RSA.new(File.read(@key_file))		
 			token = JWT.decode(cookies['JWT_CLAIMS'], @public_key, true, { :algorithm => 'RS256' ,:aud=> 'Audience',:iss=> 'Issuer' })[0]
@@ -48,36 +57,9 @@ class CustomDelegate
 			false
   end	
 
- def redirect(options = {})
-   		
-
-	identifier = JSON.parse(Base64.decode64(context['identifier']))
-	cookies = context['cookies']
-	if context['cookies'].select{ |c| c['JWT_CLAIMS'] }.any?
-			@key_file = File.join(get_work_dir, 'keyfile-pub.pem')	
- 			@public_key ||= OpenSSL::PKey::RSA.new(File.read(@key_file))		
-			token = JWT.decode(cookies['JWT_CLAIMS'], @public_key, true, { :algorithm => 'RS256' ,:aud=> 'Audience',:iss=> 'Issuer' })[0]
-
-			if token['rep_id'] != identifier['rep_id']
-				 raise 'An error has occured.'
-			end
-		else	
-			if identifier['instance'].end_with?('.corp')
-	        			uri = "http://#{identifier['instance']}.exlibrisgroup.com:1801"
-        			else
-	       				uri = "https://#{identifier['instance']}.alma.exlibrisgroup.com"
-			end
-			uri = URI("#{uri}/view/delivery/#{identifier['institution']}/#{identifier['rep_id']}")
-				
-				Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme.eql?('https')) do |http|
-  				resp = http.head(uri)
-			end
-	
-	end
-
-	rescue Exception => ex 
-			puts "delegates.rb: authorized? error. #{ex.class}: #{ex.message}"
-  end
+ def redirect(options = {})			
+ 
+end
 
  
 
@@ -87,13 +69,13 @@ class CustomDelegate
 
  
 # def s3source_object_info(options = {})
-#     JSON.parse(Base64.decode64(context['identifier']))
+#     JSON.parse(Base64.decode64(@context['identifier']))
 # end
 
 
  def filesystemsource_pathname(options = {})
 			# Decode the identifier
-			identifier = JSON.parse(Base64.decode64(context['identifier']))
+			identifier = JSON.parse(Base64.decode64(@context['identifier']))
 
 			# Build path
 			path = get_property('FilesystemCache.pathname')
