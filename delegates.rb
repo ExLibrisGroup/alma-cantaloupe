@@ -8,7 +8,6 @@ require 'jwt'
 require 'openssl'
 require 'logger'
 require 'java'
-java_import java.lang.System
 
 class CustomDelegate
 
