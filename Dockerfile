@@ -4,7 +4,7 @@ FROM openjdk:8-jdk
 
 #CANTALOUPE_VERSION 3.4.3
 ENV CANTALOUPE_VERSION 3.4.3
-#Checking Docker-hub sync  test
+#Checking Docker-hub sync -- test
 # Update packages and install tools 
 RUN apt-get update && apt-get install -y --no-install-recommends \
 	wget git gcc g++ unzip make pkg-config
