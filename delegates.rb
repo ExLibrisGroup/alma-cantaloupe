@@ -7,21 +7,20 @@ require 'cgi'
 require 'jwt'
 require 'openssl'
 require 'logger'
+require 'java'
+java_import java.lang.System
+class CustomDelegate
 
+  attr_accessor :context
 
-module Cantaloupe
-	@@reps ||= {}
-
-  def self.authorized?(identifier, full_size, operations, resulting_size,
-                       output_format, request_uri, request_headers, client_ip,
-                       cookies)
-
+  def authorized?(options = {})
 
 		
 
-	identifier = JSON.parse(Base64.decode64(identifier))
-	if cookies.select{ |c| c['JWT_CLAIMS'] }.any?
-			@key_file = File.join(Cantaloupe::Utils::WORKDIR, 'keyfile-pub.pem')	
+	identifier = JSON.parse(Base64.decode64(context['identifier']))
+	cookies = context['cookies']
+	if context['cookies'].select{ |c| c['JWT_CLAIMS'] }.any?
+			@key_file = File.join(get_work_dir, 'keyfile-pub.pem')	
  			@public_key ||= OpenSSL::PKey::RSA.new(File.read(@key_file))		
 			token = JWT.decode(cookies['JWT_CLAIMS'], @public_key, true, { :algorithm => 'RS256' ,:aud=> 'Audience',:iss=> 'Issuer' })[0]
 
@@ -44,29 +43,33 @@ module Cantaloupe
 	
 	end
 
-	rescue Exception => ex
+	rescue Exception => ex 
 			puts "delegates.rb: authorized? error. #{ex.class}: #{ex.message}"
 			false
   end	
 
-  def self.extra_iiif2_information_response_keys(identifier)
+ def redirect(options = {})
+   		
+  end
+
+ 
+
+ def extra_iiif2_information_response_keys(options = {})
     { }
   end  
 
-	module FilesystemResolver
+ 
+# def s3source_object_info(options = {})
+#     JSON.parse(Base64.decode64(context['identifier']))
+# end
 
-		###
-		# Gets a JWT as an identifier 
-		# and extracts the endpoint, bucket, and file path.
-		# Calculates the path. Checks if the file exists.
-		# If not, file is downloaded. Returns the path.
-		###
-    def self.get_pathname(identifier, context)
+
+ def filesystemsource_pathname(options = {})
 			# Decode the identifier
-			identifier = JSON.parse(Base64.decode64(identifier))
+			identifier = JSON.parse(Base64.decode64(context['identifier']))
 
 			# Build path
-			path = Utils::get_property('FilesystemCache.pathname')
+			path = get_property('FilesystemCache.pathname')
 			path = File.join(path, 'source', identifier['bucket'], identifier['key'])
 
 			# If doesn't exist, download
@@ -86,28 +89,25 @@ module Cantaloupe
 			nil
     end
 
-  end
-  private
-
-  module Utils
-
-  	begin
-			require 'java'
-			include_package java.lang
-			WORKDIR = File.expand_path(File.dirname(System.getProperties['cantaloupe.config']))
+ def get_work_dir
+	
+			workdir= File.expand_path(File.dirname(System.getProperties['cantaloupe.config']))
+			puts workdir
+			return workdir
 		rescue LoadError # For development with regular Ruby
 			require 'inifile'
-			WORKDIR = File.expand_path(File.dirname(__FILE__))
-			@inifile = IniFile.load(File.join(WORKDIR, 'cantaloupe.properties'))['global']
+			workdir= File.expand_path(File.dirname(__FILE__))
+			@inifile = IniFile.load(File.join(workdir, 'cantaloupe.properties'))['global']
+			puts workdir
+			return workdir
 		end	
+def get_property(property)
+	@inifile ? @inifile[property] :
+	Java::EduIllinoisLibraryCantaloupeConfig::ConfigurationFactory.getInstance().getString(property)	
+	rescue
+	nil
+end
 
-  	def self.get_property(property)
-			@inifile ? @inifile[property] : 
-				Java::EduIllinoisLibraryCantaloupeConfig::ConfigurationFactory.getInstance().getString(property) 
-		rescue
-			nil
-  	end
-  end  
 
 end
 
