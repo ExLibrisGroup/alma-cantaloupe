@@ -1,7 +1,7 @@
 {
   "AWSEBDockerrunVersion": "1",
   "Image": {
-    "Name": "exlibrisgroup/alma-cantaloupe:4.0.2.1",
+    "Name": "exlibrisgroup/alma-cantaloupe",
     "Update": "true"
   },
   "Ports": [
